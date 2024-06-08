@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime
 
 
-def get_top_users(mongo_uri, db_name, collection_name, top_n=10):
+def get_top_users(mongo_uri, db_name, collection_name, start_date, end_date, top_n=0):
     # Connect to MongoDB
     client = MongoClient(mongo_uri)
     db = client[db_name]
@@ -12,6 +12,14 @@ def get_top_users(mongo_uri, db_name, collection_name, top_n=10):
 
     # Aggregation pipeline to count messages per user
     pipeline = [
+        {
+            "$match": {
+                "date": {
+                    "$gte": start_date,
+                    "$lt": end_date
+                }
+            }
+        },
         {
             "$group": {
                 "_id": "$from",  # Group by the 'from' field (username)
@@ -80,18 +88,24 @@ def get_message_counts_by_date(mongo_uri, db_name, collection_name, start_date, 
     return message_counts
 
 
-from pymongo import MongoClient
-
-def get_question_counts_by_user(mongo_uri, db_name, collection_name):
+def get_question_counts_by_user(mongo_uri, db_name, collection_name, start_date, end_date):
     # Connect to MongoDB
     client = MongoClient(mongo_uri)
     db = client[db_name]
     collection = db[collection_name]
 
+    # Convert date strings to datetime objects
+    # start_datetime = datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S')
+    # end_datetime = datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S')
+
     # Aggregation pipeline to count questions per user
     pipeline = [
         {
             "$match": {
+                "date": {
+                    "$gte": start_date,
+                    "$lt": end_date
+                },
                 "text": {"$regex": r"\?|؟$"}  # Match messages ending with a question mark
             }
         },
