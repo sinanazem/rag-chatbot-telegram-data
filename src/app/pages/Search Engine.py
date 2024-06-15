@@ -76,38 +76,48 @@ with col4:
         
 user_query = st.text_input("Search Message")
 
-def query_print(query, index, pre_processed_data, data, content=False, max_cnt=10):
-    results = process_query(query, index, pre_processed_data)[:max_cnt]
-    if len(results) == 0:
-        st.write("نتیجه ای یافت نشد")
-    for rank, doc in enumerate(results):
-        if doc is None:
-            continue
-        st.write(50 * '=')
-        st.write(f'Rank: {rank + 1}, docID: {doc}')
-        for dict_ in data:
-            if dict_["id"] == str(doc):
-                st.write(f'From: {dict_["from"]}')
-                st.write(f'Date: {dict_["date"]}')
-                st.write(f'{dict_["text"]}')
-                break
-
-
-with open("src/search_engine/data/pre_processed_telegram_data.json", 'r') as f:
-    pre_processed_data = json.load(f)
-    
-with open("src/search_engine/index_dir/index.json", 'r') as f:
-    index = json.load(f)
-
 uri = "mongodb://localhost:27017/"
 database_name = "pytopia"
 collection_name = "messages"
 query = {}  # Fetch all documents
 
-data = fetch_data_from_mongodb(uri, database_name, collection_name, query)
+from src.search_engine.index_search import process_query
+from src.mongo_analytics.load import fetch_data_from_mongodb
+from src.search_engine.indexsearch import process_query
+import json
+
+
+def query_streamlit(user_query, uri, database_name, collection_name, query_db={}):
+
+    data = fetch_data_from_mongodb(uri, database_name, collection_name, query_db)
+    
+    with open("/mnt/c/Users/user/OneDrive/Desktop/rag-chatbot-telegram-data/src/search_engine/data/pre_processed_telegram_data.json", 'r') as f:
+        pre_processed_data = json.load(f)
+    
+    with open("/mnt/c/Users/user/OneDrive/Desktop/rag-chatbot-telegram-data/src/search_engine/index_dir/index.json", 'r') as f:
+        index = json.load(f)
+        
+    match_search_id_list = process_query(user_query)
+    
+    def find_msg(msg_id_list):
+        list_ = []
+        for data_dict in data:
+            if str(data_dict["id"]) in msg_id_list:
+                list_.append({"From": data_dict['from'], "Date":data_dict['date'], "Text":data_dict['text']}) 
+        return list_
+    return find_msg(match_search_id_list)
+
 
 if st.button("search"):
-    query_print(user_query, index, pre_processed_data, data)
+    with st.spinner('Loading data...'):
+        result_list = query_streamlit(user_query, uri, database_name, collection_name, query_db={})
+        for chat in result_list:
+            if isinstance(chat["Text"], str):
+                st.info(f'{chat["From"]} | {chat["Date"]}')
+                st.warning(chat["Text"])
+        
+    
+    
 
 
 

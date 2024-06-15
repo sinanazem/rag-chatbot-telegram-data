@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from datetime import datetime
 
 
-def get_top_users(mongo_uri, db_name, collection_name, start_date, end_date, top_n=0):
+def get_top_users(mongo_uri, db_name, collection_name, start_date, end_date, top_n=10):
     # Connect to MongoDB
     client = MongoClient(mongo_uri)
     db = client[db_name]

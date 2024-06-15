@@ -90,7 +90,7 @@ start_date = start_date_input.strftime('%Y-%m-%dT%H:%M:%S')
 end_date = end_date_input.strftime('%Y-%m-%dT%H:%M:%S')
 
 mongo_uri = "mongodb://localhost:27017/"
-db_name = "pytopia"
+db_name = "asama"
 collection_name = "messages"
 
 
